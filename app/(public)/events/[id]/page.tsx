@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { CalendarDays, Clock, MapPin, Video, Users, Tag } from "lucide-react";
-import { Settings } from "lucide-react";
+import { Settings, CheckCircle2 } from "lucide-react";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
 import { Card, CardBody, Badge } from "@/components/ui/card";
@@ -58,6 +58,14 @@ export default async function EventDetailsPage({
   // Private events are hidden from everyone except their managers.
   // Full referral-link / access-code entry arrives in Sprint 7.
   if (event.visibility === "PRIVATE" && !canManage) notFound();
+
+  const myRegistration = session?.user?.id
+    ? await prisma.registration.findUnique({
+        where: { eventId_userId: { eventId: event.id, userId: session.user.id } },
+        select: { status: true },
+      })
+    : null;
+  const isRegistered = myRegistration?.status === "CONFIRMED";
 
   const isVirtual = event.format === "VIRTUAL";
   const confirmed = event._count.registrations;
@@ -170,17 +178,39 @@ export default async function EventDetailsPage({
 
               {!session?.user ? (
                 <ButtonLink
-                  href={`/login?callbackUrl=/events/${event.id}`}
+                  href={`/login?callbackUrl=/events/${event.id}/register`}
                   size="lg"
                   className="w-full"
                 >
                   Log in to register
                 </ButtonLink>
-              ) : (
-                // Full RSVP flow lands in Sprint 5.
+              ) : isRegistered ? (
+                <div className="space-y-2">
+                  <p className="inline-flex items-center gap-1 text-sm font-medium text-success">
+                    <CheckCircle2 className="h-4 w-4" />
+                    You&apos;re registered
+                  </p>
+                  <ButtonLink
+                    href="/account/tickets"
+                    variant="outline"
+                    size="lg"
+                    className="w-full"
+                  >
+                    View my ticket
+                  </ButtonLink>
+                </div>
+              ) : isFull ? (
                 <Button size="lg" className="w-full" disabled>
-                  {isFull ? "Fully booked" : "Register (coming in Sprint 5)"}
+                  Fully booked
                 </Button>
+              ) : (
+                <ButtonLink
+                  href={`/events/${event.id}/register`}
+                  size="lg"
+                  className="w-full"
+                >
+                  Register
+                </ButtonLink>
               )}
             </CardBody>
           </Card>

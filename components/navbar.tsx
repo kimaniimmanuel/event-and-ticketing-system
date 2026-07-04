@@ -25,6 +25,9 @@ export async function Navbar() {
               <ButtonLink href="/events/new" variant="ghost" size="sm">
                 Create event
               </ButtonLink>
+              <ButtonLink href="/account/tickets" variant="ghost" size="sm">
+                My tickets
+              </ButtonLink>
               <ButtonLink href="/account" variant="outline" size="sm">
                 {user.name ?? "Account"}
               </ButtonLink>
