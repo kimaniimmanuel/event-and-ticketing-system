@@ -1,11 +1,13 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { CalendarDays, Clock, MapPin, Video, Users, Tag } from "lucide-react";
+import { Settings } from "lucide-react";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
 import { Card, CardBody, Badge } from "@/components/ui/card";
 import { ButtonLink, Button } from "@/components/ui/button";
 import { Avatar } from "@/components/ui/avatar";
+import { getUserEventRole, CAN_EDIT_ROLES } from "@/lib/events";
 import { formatEventDate, formatEventTime } from "@/lib/format";
 
 async function getEvent(id: string) {
@@ -47,13 +49,16 @@ export default async function EventDetailsPage({
 }) {
   const { id } = await params;
   const event = await getEvent(id);
-
-  // Private-event access control arrives in Sprint 7; hide them from the public route for now.
-  if (!event || event.status !== "PUBLISHED" || event.visibility !== "PUBLIC") {
-    notFound();
-  }
+  if (!event || event.status !== "PUBLISHED") notFound();
 
   const session = await auth();
+  const role = await getUserEventRole(session?.user?.id, event.id);
+  const canManage = Boolean(role && CAN_EDIT_ROLES.includes(role));
+
+  // Private events are hidden from everyone except their managers.
+  // Full referral-link / access-code entry arrives in Sprint 7.
+  if (event.visibility === "PRIVATE" && !canManage) notFound();
+
   const isVirtual = event.format === "VIRTUAL";
   const confirmed = event._count.registrations;
   const spotsLeft = event.capacity != null ? event.capacity - confirmed : null;
@@ -86,6 +91,19 @@ export default async function EventDetailsPage({
       </div>
 
       <h1 className="text-3xl font-bold">{event.title}</h1>
+
+      {canManage && (
+        <div className="flex items-center justify-between gap-3 rounded-lg border border-primary/30 bg-primary/5 px-4 py-3">
+          <p className="text-sm">
+            You&apos;re the <span className="font-medium">{role?.toLowerCase()}</span> of this
+            event.
+          </p>
+          <ButtonLink href={`/events/${event.id}/manage`} variant="outline" size="sm">
+            <Settings className="h-4 w-4" />
+            Manage
+          </ButtonLink>
+        </div>
+      )}
 
       <div className="grid gap-6 md:grid-cols-3">
         <div className="space-y-6 md:col-span-2">
