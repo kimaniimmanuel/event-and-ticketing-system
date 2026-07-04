@@ -1,14 +1,22 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ScanLine } from "lucide-react";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
 import { Card, CardBody } from "@/components/ui/card";
+import { ButtonLink } from "@/components/ui/button";
 import { EventForm } from "@/components/events/event-form";
-import { getUserEventRole, CAN_EDIT_ROLES, CAN_DELETE_ROLES } from "@/lib/events";
+import {
+  getUserEventRole,
+  CAN_EDIT_ROLES,
+  CAN_DELETE_ROLES,
+  CAN_MANAGE_ROLES,
+} from "@/lib/events";
 import { toDateTimeLocalValue } from "@/lib/format";
 import { updateEventAction } from "./actions";
 import { DeleteEventButton } from "./delete-event-button";
+import { TeamManager } from "./team-manager";
+import { InviteManager } from "./invite-manager";
 
 export const metadata = { title: "Manage event" };
 
@@ -21,12 +29,17 @@ export default async function ManageEventPage({
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
 
-  const event = await prisma.event.findUnique({ where: { id } });
+  const event = await prisma.event.findUnique({
+    where: { id },
+    include: {
+      roles: { include: { user: { select: { name: true, username: true } } } },
+      invites: { orderBy: { email: "asc" } },
+    },
+  });
   if (!event) notFound();
 
   const role = await getUserEventRole(session.user.id, id);
   if (!role || !CAN_EDIT_ROLES.includes(role)) {
-    // Not a manager of this event.
     redirect(`/events/${id}`);
   }
 
@@ -34,6 +47,19 @@ export default async function ManageEventPage({
     orderBy: { name: "asc" },
     select: { id: true, name: true },
   });
+
+  const roleOrder = ["HOST", "COHOST", "ADMIN", "VOLUNTEER"];
+  const members = event.roles
+    .map((r) => ({
+      userId: r.userId,
+      name: r.user.name,
+      username: r.user.username,
+      role: r.role,
+    }))
+    .sort((a, b) => roleOrder.indexOf(a.role) - roleOrder.indexOf(b.role));
+
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3210";
+  const inviteUrl = `${baseUrl}/events/${id}?code=${event.accessCode ?? ""}`;
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
@@ -45,11 +71,15 @@ export default async function ManageEventPage({
         Back to event
       </Link>
 
-      <div>
-        <h1 className="text-2xl font-bold">Manage event</h1>
-        <p className="text-sm text-muted">
-          You are the {role.toLowerCase()} of this event.
-        </p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold">Manage event</h1>
+          <p className="text-sm text-muted">You are the {role.toLowerCase()} of this event.</p>
+        </div>
+        <ButtonLink href={`/events/${id}/check-in`} variant="outline" size="sm">
+          <ScanLine className="h-4 w-4" />
+          Check in
+        </ButtonLink>
       </div>
 
       <Card>
@@ -77,16 +107,32 @@ export default async function ManageEventPage({
         </CardBody>
       </Card>
 
-      {event.visibility === "PRIVATE" && event.accessCode && (
-        <Card>
-          <CardBody className="space-y-1">
-            <h2 className="font-semibold">Private access</h2>
+      <Card>
+        <CardBody className="space-y-4">
+          <div>
+            <h2 className="font-semibold">Team &amp; roles</h2>
             <p className="text-sm text-muted">
-              Access code: <span className="font-mono font-semibold">{event.accessCode}</span>
+              Add co-hosts, admins, and volunteers to help run this event.
             </p>
-            <p className="text-xs text-muted">
-              Full invite management (referral links, email allowlist) arrives in Sprint 7.
-            </p>
+          </div>
+          <TeamManager
+            eventId={id}
+            members={members}
+            canManage={CAN_MANAGE_ROLES.includes(role)}
+          />
+        </CardBody>
+      </Card>
+
+      {event.visibility === "PRIVATE" && (
+        <Card>
+          <CardBody className="space-y-3">
+            <h2 className="font-semibold">Private access</h2>
+            <InviteManager
+              eventId={id}
+              inviteUrl={inviteUrl}
+              accessCode={event.accessCode ?? ""}
+              invites={event.invites.map((i) => i.email)}
+            />
           </CardBody>
         </Card>
       )}

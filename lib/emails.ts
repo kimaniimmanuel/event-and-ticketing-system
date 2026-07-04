@@ -64,6 +64,20 @@ export function cancellationEmail(name: string, event: EmailEvent) {
   return { subject, html, text };
 }
 
+export function roleAssignmentEmail(name: string, event: EmailEvent, role: string) {
+  const friendly = role.charAt(0) + role.slice(1).toLowerCase();
+  const subject = `You're now a ${friendly.toLowerCase()} for ${event.title}`;
+  const html = layout(
+    `You've been added to a team 🤝`,
+    `<p>Hi ${name}, you've been assigned the <strong>${friendly}</strong> role for
+     <strong>${event.title}</strong>.</p>
+     ${detailsBlock(event)}
+     <p>${button(`${appBaseUrl()}/events/${event.id}`, "View event")}</p>`,
+  );
+  const text = `You've been assigned the ${friendly} role for ${event.title}. ${appBaseUrl()}/events/${event.id}`;
+  return { subject, html, text };
+}
+
 export function reminderEmail(name: string, event: EmailEvent) {
   const subject = `Reminder: ${event.title} is coming up`;
   const html = layout(

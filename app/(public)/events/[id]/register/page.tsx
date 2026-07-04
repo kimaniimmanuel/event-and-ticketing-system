@@ -6,17 +6,20 @@ import { prisma } from "@/lib/db";
 import { Card, CardBody } from "@/components/ui/card";
 import { ButtonLink } from "@/components/ui/button";
 import { formatEventDate } from "@/lib/format";
-import { getUserEventRole, CAN_EDIT_ROLES } from "@/lib/events";
+import { hasEventAccess } from "@/lib/events";
 import { RegisterForm } from "./register-form";
 
 export const metadata = { title: "Register" };
 
 export default async function RegisterPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ code?: string }>;
 }) {
   const { id } = await params;
+  const { code } = await searchParams;
   const session = await auth();
   if (!session?.user?.id) redirect(`/login?callbackUrl=/events/${id}/register`);
 
@@ -26,11 +29,15 @@ export default async function RegisterPage({
   });
   if (!event || event.status !== "PUBLISHED") notFound();
 
-  // Private events: only managers can view for now (Sprint 7 adds access codes).
-  if (event.visibility === "PRIVATE") {
-    const role = await getUserEventRole(session.user.id, id);
-    if (!role || !CAN_EDIT_ROLES.includes(role)) notFound();
-  }
+  // Private events require access (code, allowlist, or role); otherwise send them
+  // to the event page which shows the access gate.
+  const access = await hasEventAccess({
+    event,
+    userId: session.user.id,
+    userEmail: session.user.email,
+    code,
+  });
+  if (!access) redirect(`/events/${id}`);
 
   const [user, existing] = await Promise.all([
     prisma.user.findUnique({
