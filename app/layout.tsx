@@ -12,13 +12,26 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3210";
+
 export const metadata: Metadata = {
+  metadataBase: new URL(appUrl),
   title: {
     default: "Tikiti — Discover & host free events",
     template: "%s · Tikiti",
   },
   description:
     "A centralized platform to discover, register for, and host free events, with digital QR tickets.",
+  openGraph: {
+    siteName: "Tikiti",
+    type: "website",
+    title: "Tikiti — Discover & host free events",
+    description:
+      "A centralized platform to discover, register for, and host free events, with digital QR tickets.",
+  },
+  twitter: {
+    card: "summary_large_image",
+  },
 };
 
 export default function RootLayout({

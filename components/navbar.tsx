@@ -2,10 +2,16 @@ import Link from "next/link";
 import { Ticket } from "lucide-react";
 import { auth, signOut } from "@/auth";
 import { ButtonLink, Button } from "@/components/ui/button";
+import { MobileNav } from "@/components/mobile-nav";
 
 export async function Navbar() {
   const session = await auth();
   const user = session?.user;
+
+  async function signOutAction() {
+    "use server";
+    await signOut({ redirectTo: "/" });
+  }
 
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-surface/80 backdrop-blur">
@@ -15,7 +21,8 @@ export async function Navbar() {
           Tikiti
         </Link>
 
-        <nav className="flex items-center gap-2">
+        {/* Desktop nav */}
+        <nav className="hidden items-center gap-2 md:flex">
           <ButtonLink href="/events" variant="ghost" size="sm">
             Discover
           </ButtonLink>
@@ -34,12 +41,7 @@ export async function Navbar() {
               <ButtonLink href="/account" variant="outline" size="sm">
                 {user.name ?? "Account"}
               </ButtonLink>
-              <form
-                action={async () => {
-                  "use server";
-                  await signOut({ redirectTo: "/" });
-                }}
-              >
+              <form action={signOutAction}>
                 <Button variant="ghost" size="sm" type="submit">
                   Log out
                 </Button>
@@ -56,6 +58,14 @@ export async function Navbar() {
             </>
           )}
         </nav>
+
+        {/* Mobile nav */}
+        <div className="md:hidden">
+          <MobileNav
+            user={user ? { name: user.name ?? null } : null}
+            signOutAction={signOutAction}
+          />
+        </div>
       </div>
     </header>
   );
