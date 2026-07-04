@@ -1,48 +1,79 @@
+import { Prisma } from "@prisma/client";
+import { CalendarX } from "lucide-react";
 import { prisma } from "@/lib/db";
-import { Card, CardBody, Badge } from "@/components/ui/card";
+import { Card, CardBody } from "@/components/ui/card";
+import { EventCard } from "@/components/events/event-card";
+import { EventFilters, type FilterValues } from "./event-filters";
 
 export const metadata = { title: "Discover events" };
 
-export default async function DiscoverPage() {
-  const events = await prisma.event.findMany({
-    where: { status: "PUBLISHED", visibility: "PUBLIC" },
-    include: { category: true },
-    orderBy: { startAt: "asc" },
-    take: 50,
-  });
+export default async function DiscoverPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | undefined>>;
+}) {
+  const sp = await searchParams;
+  const current: FilterValues = {
+    q: sp.q?.trim() || undefined,
+    category: sp.category || undefined,
+    location: sp.location?.trim() || undefined,
+    format: sp.format || undefined,
+  };
+
+  const where: Prisma.EventWhereInput = {
+    status: "PUBLISHED",
+    visibility: "PUBLIC",
+    startAt: { gte: new Date() }, // upcoming only
+  };
+  if (current.q) {
+    where.OR = [
+      { title: { contains: current.q } },
+      { description: { contains: current.q } },
+    ];
+  }
+  if (current.category) where.categoryId = current.category;
+  if (current.location) where.venue = { contains: current.location };
+  if (current.format) where.format = current.format;
+
+  const [events, categories] = await Promise.all([
+    prisma.event.findMany({
+      where,
+      include: { category: { select: { name: true } } },
+      orderBy: { startAt: "asc" },
+      take: 60,
+    }),
+    prisma.category.findMany({
+      orderBy: { name: "asc" },
+      select: { id: true, name: true },
+    }),
+  ]);
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold">Discover events</h1>
         <p className="text-sm text-muted">
-          Search and filters arrive in Sprint 3. Showing all upcoming public events.
+          Browse upcoming free events. Filter by category, location and format.
         </p>
       </div>
 
+      <EventFilters categories={categories} current={current} />
+
+      <p className="text-sm text-muted">
+        {events.length} {events.length === 1 ? "event" : "events"} found
+      </p>
+
       {events.length === 0 ? (
         <Card>
-          <CardBody className="text-center text-muted">
-            No events yet. Run the seed script or create the first one.
+          <CardBody className="flex flex-col items-center gap-2 py-12 text-center text-muted">
+            <CalendarX className="h-8 w-8" />
+            <p>No events found matching your search. Try adjusting your filters.</p>
           </CardBody>
         </Card>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {events.map((event) => (
-            <Card key={event.id}>
-              <CardBody>
-                <Badge>{event.category.name}</Badge>
-                <h3 className="mt-2 font-semibold">{event.title}</h3>
-                <p className="mt-1 line-clamp-2 text-sm text-muted">{event.description}</p>
-                <p className="mt-3 text-sm font-medium">
-                  {event.startAt.toLocaleDateString("en-KE", {
-                    weekday: "short",
-                    day: "numeric",
-                    month: "short",
-                  })}
-                </p>
-              </CardBody>
-            </Card>
+            <EventCard key={event.id} event={event} />
           ))}
         </div>
       )}
