@@ -127,6 +127,19 @@ export function EventForm({
         </div>
       </div>
 
+      <div>
+        <Label htmlFor="registrationDeadline">Registration closes (optional)</Label>
+        <Input
+          id="registrationDeadline"
+          type="datetime-local"
+          {...register("registrationDeadline")}
+        />
+        <p className="mt-1 text-xs text-muted">
+          Leave blank to accept registrations until the event starts.
+        </p>
+        <FieldError>{errors.registrationDeadline?.message}</FieldError>
+      </div>
+
       <div className="grid gap-4 sm:grid-cols-3">
         <div>
           <Label htmlFor="capacity">Capacity (optional)</Label>

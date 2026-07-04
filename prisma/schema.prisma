@@ -99,8 +99,9 @@ model Event {
   description  String
   bannerImage  String?
   logo         String?
-  startAt      DateTime
-  endAt        DateTime?
+  startAt              DateTime
+  endAt                DateTime?
+  registrationDeadline DateTime? // registration closes at this time (defaults to startAt)
   format       String // IN_PERSON | VIRTUAL
   venue        String?
   virtualLink  String?

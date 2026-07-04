@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { ArrowLeft, ScanLine } from "lucide-react";
+import { ArrowLeft, ScanLine, BarChart3 } from "lucide-react";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
 import { Card, CardBody } from "@/components/ui/card";
@@ -76,10 +76,16 @@ export default async function ManageEventPage({
           <h1 className="text-2xl font-bold">Manage event</h1>
           <p className="text-sm text-muted">You are the {role.toLowerCase()} of this event.</p>
         </div>
-        <ButtonLink href={`/events/${id}/check-in`} variant="outline" size="sm">
-          <ScanLine className="h-4 w-4" />
-          Check in
-        </ButtonLink>
+        <div className="flex flex-wrap items-center gap-2">
+          <ButtonLink href={`/events/${id}/analytics`} variant="outline" size="sm">
+            <BarChart3 className="h-4 w-4" />
+            Analytics
+          </ButtonLink>
+          <ButtonLink href={`/events/${id}/check-in`} variant="outline" size="sm">
+            <ScanLine className="h-4 w-4" />
+            Check in
+          </ButtonLink>
+        </div>
       </div>
 
       <Card>
@@ -97,6 +103,9 @@ export default async function ManageEventPage({
               virtualLink: event.virtualLink ?? "",
               startAt: toDateTimeLocalValue(event.startAt),
               endAt: event.endAt ? toDateTimeLocalValue(event.endAt) : "",
+              registrationDeadline: event.registrationDeadline
+                ? toDateTimeLocalValue(event.registrationDeadline)
+                : "",
               capacity: event.capacity != null ? String(event.capacity) : "",
               visibility: event.visibility as "PUBLIC" | "PRIVATE",
               recurrence: event.recurrence as "NONE" | "DAILY" | "WEEKLY" | "MONTHLY",

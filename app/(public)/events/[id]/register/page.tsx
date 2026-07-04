@@ -6,7 +6,7 @@ import { prisma } from "@/lib/db";
 import { Card, CardBody } from "@/components/ui/card";
 import { ButtonLink } from "@/components/ui/button";
 import { formatEventDate } from "@/lib/format";
-import { hasEventAccess } from "@/lib/events";
+import { hasEventAccess, isRegistrationOpen } from "@/lib/events";
 import { RegisterForm } from "./register-form";
 
 export const metadata = { title: "Register" };
@@ -52,6 +52,7 @@ export default async function RegisterPage({
   const alreadyRegistered = existing?.status === "CONFIRMED";
   const isFull =
     event.capacity != null && event._count.registrations >= event.capacity;
+  const registrationClosed = !isRegistrationOpen(event);
 
   return (
     <div className="mx-auto max-w-lg space-y-6">
@@ -81,6 +82,13 @@ export default async function RegisterPage({
               <CheckCircle2 className="mx-auto h-10 w-10 text-success" />
               <p className="font-medium">You&apos;re already registered for this event.</p>
               <ButtonLink href="/account/tickets">View my ticket</ButtonLink>
+            </div>
+          ) : registrationClosed ? (
+            <div className="space-y-2 text-center">
+              <p className="font-medium">Registration for this event has closed.</p>
+              <Link href={`/events/${id}`} className="text-sm text-primary hover:underline">
+                Back to event
+              </Link>
             </div>
           ) : isFull ? (
             <div className="space-y-2 text-center">

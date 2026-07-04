@@ -27,6 +27,9 @@ export async function createEventAction(input: EventInput) {
       virtualLink: d.format === "VIRTUAL" ? d.virtualLink || null : null,
       startAt: parseNairobiDateTime(d.startAt),
       endAt: d.endAt ? parseNairobiDateTime(d.endAt) : null,
+      registrationDeadline: d.registrationDeadline
+        ? parseNairobiDateTime(d.registrationDeadline)
+        : null,
       capacity: d.capacity ? Number(d.capacity) : null,
       visibility: d.visibility,
       recurrence: d.recurrence,

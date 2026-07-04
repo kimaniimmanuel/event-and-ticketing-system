@@ -14,6 +14,7 @@ export const eventSchema = z
     virtualLink: z.string().url("Enter a valid URL").optional().or(z.literal("")),
     startAt: z.string().min(1, "Start date and time is required"),
     endAt: z.string().optional().or(z.literal("")),
+    registrationDeadline: z.string().optional().or(z.literal("")),
     capacity: z
       .string()
       .optional()
@@ -59,6 +60,16 @@ export const eventSchema = z
           path: ["endAt"],
           code: "custom",
           message: "End time must be after the start time",
+        });
+      }
+    }
+    if (data.registrationDeadline) {
+      const deadline = new Date(data.registrationDeadline);
+      if (!Number.isNaN(deadline.getTime()) && !Number.isNaN(start.getTime()) && deadline >= start) {
+        ctx.addIssue({
+          path: ["registrationDeadline"],
+          code: "custom",
+          message: "Registration must close before the event starts",
         });
       }
     }

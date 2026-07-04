@@ -19,7 +19,7 @@ export const authConfig = {
         path.startsWith("/onboarding") ||
         path === "/events/new" ||
         path === "/orgs/new" ||
-        /^\/events\/[^/]+\/(manage|check-in|register)/.test(path) ||
+        /^\/events\/[^/]+\/(manage|check-in|register|analytics)/.test(path) ||
         /^\/orgs\/[^/]+\/manage/.test(path);
 
       if (needsAuth && !isLoggedIn) return false; // → redirect to /login

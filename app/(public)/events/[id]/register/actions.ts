@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
 import { registrationSchema, type RegistrationInput } from "@/lib/validators/registration";
+import { isRegistrationOpen } from "@/lib/events";
 import { sendEmail } from "@/lib/email";
 import { registrationConfirmationEmail } from "@/lib/emails";
 
@@ -32,6 +33,9 @@ export async function registerForEventAction(
   const event = await prisma.event.findUnique({ where: { id: eventId } });
   if (!event || event.status !== "PUBLISHED") {
     return { error: "This event is not available for registration." };
+  }
+  if (!isRegistrationOpen(event)) {
+    return { error: "Registration for this event has closed." };
   }
 
   try {

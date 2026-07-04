@@ -2,14 +2,20 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { CalendarDays, Clock, MapPin, Video, Users, Tag } from "lucide-react";
-import { Settings, CheckCircle2, Lock, ScanLine } from "lucide-react";
+import { Settings, CheckCircle2, Lock, ScanLine, BarChart3 } from "lucide-react";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
 import { Card, CardBody, Badge } from "@/components/ui/card";
 import { ButtonLink, Button } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/input";
 import { Avatar } from "@/components/ui/avatar";
-import { getUserEventRole, CAN_EDIT_ROLES, CAN_CHECKIN_ROLES, hasEventAccess } from "@/lib/events";
+import {
+  getUserEventRole,
+  CAN_EDIT_ROLES,
+  CAN_CHECKIN_ROLES,
+  hasEventAccess,
+  isRegistrationOpen,
+} from "@/lib/events";
 import { formatEventDate, formatEventTime } from "@/lib/format";
 
 async function getEvent(id: string) {
@@ -111,6 +117,7 @@ export default async function EventDetailsPage({
   const confirmed = event._count.registrations;
   const spotsLeft = event.capacity != null ? event.capacity - confirmed : null;
   const isFull = spotsLeft != null && spotsLeft <= 0;
+  const registrationOpen = isRegistrationOpen(event);
 
   return (
     <article className="mx-auto max-w-3xl space-y-6">
@@ -146,11 +153,17 @@ export default async function EventDetailsPage({
             You&apos;re the <span className="font-medium">{role?.toLowerCase()}</span> of this
             event.
           </p>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             {canCheckIn && (
               <ButtonLink href={`/events/${event.id}/check-in`} variant="outline" size="sm">
                 <ScanLine className="h-4 w-4" />
                 Check in
+              </ButtonLink>
+            )}
+            {canManage && (
+              <ButtonLink href={`/events/${event.id}/analytics`} variant="outline" size="sm">
+                <BarChart3 className="h-4 w-4" />
+                Analytics
               </ButtonLink>
             )}
             {canManage && (
@@ -237,15 +250,14 @@ export default async function EventDetailsPage({
                 </p>
               )}
 
-              {!session?.user ? (
-                <ButtonLink
-                  href={`/login?callbackUrl=${encodeURIComponent(registerHref)}`}
-                  size="lg"
-                  className="w-full"
-                >
-                  Log in to register
-                </ButtonLink>
-              ) : isRegistered ? (
+              {registrationOpen && event.registrationDeadline && (
+                <p className="inline-flex items-center gap-1 text-sm text-muted">
+                  <Clock className="h-4 w-4" />
+                  Registration closes {formatEventDate(event.registrationDeadline)}
+                </p>
+              )}
+
+              {isRegistered ? (
                 <div className="space-y-2">
                   <p className="inline-flex items-center gap-1 text-sm font-medium text-success">
                     <CheckCircle2 className="h-4 w-4" />
@@ -260,6 +272,18 @@ export default async function EventDetailsPage({
                     View my ticket
                   </ButtonLink>
                 </div>
+              ) : !registrationOpen ? (
+                <Button size="lg" className="w-full" disabled>
+                  Registration closed
+                </Button>
+              ) : !session?.user ? (
+                <ButtonLink
+                  href={`/login?callbackUrl=${encodeURIComponent(registerHref)}`}
+                  size="lg"
+                  className="w-full"
+                >
+                  Log in to register
+                </ButtonLink>
               ) : isFull ? (
                 <Button size="lg" className="w-full" disabled>
                   Fully booked

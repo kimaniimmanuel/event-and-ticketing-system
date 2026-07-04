@@ -1,5 +1,27 @@
 import { prisma } from "@/lib/db";
 
+/**
+ * When registration closes: the earlier of the explicit deadline and the event
+ * start time. This guarantees past events are always closed.
+ */
+export function registrationCloseTime(event: {
+  startAt: Date;
+  registrationDeadline: Date | null;
+}): Date {
+  const { startAt, registrationDeadline } = event;
+  return registrationDeadline && registrationDeadline < startAt
+    ? registrationDeadline
+    : startAt;
+}
+
+/** Whether registration is still open for an event. */
+export function isRegistrationOpen(event: {
+  startAt: Date;
+  registrationDeadline: Date | null;
+}): boolean {
+  return registrationCloseTime(event).getTime() > Date.now();
+}
+
 /** Roles that may edit an event's details. */
 export const CAN_EDIT_ROLES = ["HOST", "COHOST", "ADMIN"];
 /** Roles that may delete an event. */
