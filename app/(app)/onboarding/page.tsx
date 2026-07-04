@@ -1,21 +1,34 @@
-import { ButtonLink } from "@/components/ui/button";
+import { auth } from "@/auth";
+import { prisma } from "@/lib/db";
 import { Card, CardBody } from "@/components/ui/card";
+import { OnboardingForm } from "./onboarding-form";
 
 export const metadata = { title: "Welcome" };
 
-export default function OnboardingPage() {
+export default async function OnboardingPage() {
+  const session = await auth();
+  const userId = session!.user.id;
+
+  const [categories, interests] = await Promise.all([
+    prisma.category.findMany({ orderBy: { name: "asc" } }),
+    prisma.userInterest.findMany({ where: { userId }, select: { categoryId: true } }),
+  ]);
+
   return (
-    <div className="mx-auto max-w-lg pt-8">
+    <div className="mx-auto max-w-lg pt-6">
       <Card>
-        <CardBody className="text-center">
-          <h1 className="text-2xl font-bold">Welcome to Tikiti! 🎉</h1>
-          <p className="mt-2 text-muted">
-            Your account is ready. Preference-based onboarding arrives in Sprint 2 — for now,
-            jump straight into discovering events.
-          </p>
-          <div className="mt-6 flex justify-center gap-3">
-            <ButtonLink href="/events">Discover events</ButtonLink>
+        <CardBody className="space-y-4">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold">What are you into? 🎉</h1>
+            <p className="mt-1 text-muted">
+              Pick a few interests and we&apos;ll personalize the events we show you. You can
+              change these anytime.
+            </p>
           </div>
+          <OnboardingForm
+            categories={categories}
+            selectedIds={interests.map((i) => i.categoryId)}
+          />
         </CardBody>
       </Card>
     </div>
