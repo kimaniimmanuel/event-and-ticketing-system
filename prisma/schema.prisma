@@ -1,0 +1,163 @@
+// Prisma schema for the Centralized Event & Ticketing System.
+// DB: SQLite (dev). Portable to PostgreSQL/MySQL by changing `datasource.provider`
+// and swapping DATABASE_URL. NOTE: SQLite does not support Prisma enums, so
+// enum-like fields are modelled as String with their allowed values documented inline.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  username     String   @unique
+  avatar       String?
+  location     String?
+  createdAt    DateTime @default(now())
+
+  interests         UserInterest[]
+  ownedOrganizations Organization[]      @relation("OrgOwner")
+  orgMemberships    OrganizationMember[]
+  hostedEvents      Event[]              @relation("EventHost")
+  eventRoles        EventRole[]
+  registrations     Registration[]
+  checkedInTickets  Ticket[]             @relation("CheckedInBy")
+}
+
+model Category {
+  id   String @id @default(cuid())
+  name String @unique
+  slug String @unique
+
+  interestedUsers UserInterest[]
+  events          Event[]
+}
+
+// Onboarding preferences: which categories a user is interested in.
+model UserInterest {
+  userId     String
+  categoryId String
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@id([userId, categoryId])
+}
+
+model Organization {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  slug        String   @unique
+  description String?
+  logo        String?
+  banner      String?
+  ownerId     String
+  createdAt   DateTime @default(now())
+
+  owner   User                 @relation("OrgOwner", fields: [ownerId], references: [id])
+  members OrganizationMember[]
+  events  Event[]
+}
+
+model OrganizationMember {
+  id             String @id @default(cuid())
+  organizationId String
+  userId         String
+  role           String // OWNER | ADMIN
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, userId])
+}
+
+model Event {
+  id           String   @id @default(cuid())
+  title        String
+  description  String
+  bannerImage  String?
+  logo         String?
+  startAt      DateTime
+  endAt        DateTime?
+  format       String // IN_PERSON | VIRTUAL
+  venue        String?
+  virtualLink  String?
+  categoryId   String
+  ticketType   String   @default("FREE") // FREE (payments are out of scope)
+  capacity     Int?
+  visibility   String   @default("PUBLIC") // PUBLIC | PRIVATE
+  recurrence   String   @default("NONE") // NONE | DAILY | WEEKLY | MONTHLY
+  accessCode   String? // for private events
+  referralSlug String   @unique @default(cuid())
+  status       String   @default("PUBLISHED") // DRAFT | PUBLISHED | CANCELLED
+  hostId       String
+  organizationId String?
+  createdAt    DateTime @default(now())
+
+  category      Category      @relation(fields: [categoryId], references: [id])
+  host          User          @relation("EventHost", fields: [hostId], references: [id])
+  organization  Organization? @relation(fields: [organizationId], references: [id])
+  roles         EventRole[]
+  invites       EventInvite[]
+  registrations Registration[]
+}
+
+// Contextual per-event roles (key modeling decision).
+model EventRole {
+  id      String @id @default(cuid())
+  eventId String
+  userId  String
+  role    String // HOST | COHOST | ADMIN | VOLUNTEER
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, userId])
+}
+
+// Email allowlist for invite-only private events.
+model EventInvite {
+  id      String @id @default(cuid())
+  eventId String
+  email   String
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, email])
+}
+
+model Registration {
+  id        String   @id @default(cuid())
+  eventId   String
+  userId    String
+  name      String
+  email     String
+  phone     String?
+  status    String   @default("CONFIRMED") // CONFIRMED | CANCELLED
+  createdAt DateTime @default(now())
+
+  event  Event   @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ticket Ticket?
+
+  @@unique([eventId, userId]) // prevents duplicate registration
+}
+
+model Ticket {
+  id             String    @id @default(cuid())
+  registrationId String    @unique
+  code           String    @unique @default(cuid()) // encoded in the QR
+  status         String    @default("VALID") // VALID | USED | INVALID
+  checkedInAt    DateTime?
+  checkedInById  String?
+
+  registration Registration @relation(fields: [registrationId], references: [id], onDelete: Cascade)
+  checkedInBy  User?        @relation("CheckedInBy", fields: [checkedInById], references: [id])
+}
