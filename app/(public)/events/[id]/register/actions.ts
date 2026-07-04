@@ -5,6 +5,8 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
 import { registrationSchema, type RegistrationInput } from "@/lib/validators/registration";
+import { sendEmail } from "@/lib/email";
+import { registrationConfirmationEmail } from "@/lib/emails";
 
 class RegistrationError extends Error {}
 
@@ -71,6 +73,9 @@ export async function registerForEventAction(
     if (error instanceof RegistrationError) return { error: error.message };
     throw error;
   }
+
+  // Confirmation email (non-blocking failure — never breaks registration).
+  await sendEmail({ to: email, ...registrationConfirmationEmail(name, event) });
 
   revalidatePath(`/events/${eventId}`);
   redirect("/account/tickets");

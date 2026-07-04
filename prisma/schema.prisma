@@ -140,8 +140,9 @@ model Registration {
   name      String
   email     String
   phone     String?
-  status    String   @default("CONFIRMED") // CONFIRMED | CANCELLED
-  createdAt DateTime @default(now())
+  status         String    @default("CONFIRMED") // CONFIRMED | CANCELLED
+  createdAt      DateTime  @default(now())
+  reminderSentAt DateTime? // set when the pre-event reminder email is sent
 
   event  Event   @relation(fields: [eventId], references: [id], onDelete: Cascade)
   user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)

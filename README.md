@@ -1,36 +1,92 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Tikiti — Centralized Event & Ticketing System
 
-## Getting Started
+A web platform for discovering, registering for, and hosting **free** events, with digital
+QR tickets. Attendees browse and filter events and RSVP; hosts create and manage events and
+check attendees in. Built as a final-year academic project.
 
-First, run the development server:
+## Tech stack
+
+- **Next.js 16** (App Router) + **React 19** + **TypeScript**
+- **Prisma 6** + **SQLite** (portable to PostgreSQL/MySQL)
+- **Auth.js (NextAuth v5)** — email/password credentials
+- **Tailwind CSS 4** with a small hand-rolled UI kit
+- **React Hook Form + Zod** for forms and validation
+- **Nodemailer** for transactional email, **`qrcode`** for tickets
+
+## Getting started
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npx prisma migrate dev   # create the SQLite database
+npm run db:seed          # add demo categories, users, and events
+npm run dev              # http://localhost:3210
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open **http://localhost:3210**.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+> **Port note:** the app runs on **3210**, not 3000. On some Windows machines port 3000 falls
+> in a reserved range and fails to bind (`EACCES`), so the dev/start scripts pin 3210.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Demo accounts
 
-## Learn More
+| Role     | Email                  | Password      |
+| -------- | ---------------------- | ------------- |
+| Host     | `host@tikiti.dev`      | `password123` |
+| Attendee | `attendee@tikiti.dev`  | `password123` |
 
-To learn more about Next.js, take a look at the following resources:
+### Useful scripts
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- `npm run dev` — start the dev server (port 3210)
+- `npm run db:seed` — reseed demo data
+- `npm run db:studio` — open Prisma Studio to inspect the database
+- `npm run db:reset` — drop and recreate the database
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 📧 Email in development (important)
 
-## Deploy on Vercel
+Emails (registration confirmation, cancellation, and reminders) are **not delivered to real
+inboxes during development.** The app uses [**Ethereal**](https://ethereal.email), a free fake
+SMTP service that *captures* each email and gives you a preview link instead of sending it.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+**So registering with a real email address will not put anything in your real inbox** — this is
+expected. To view a sent email:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. Register for an event (or trigger a reminder — see below).
+2. Look at the **terminal running `npm run dev`**. You'll see lines like:
+   ```
+   📧 Using Ethereal test inbox (user: ab12cd@ethereal.email)
+   📧 "You're registered for …" → you@example.com — preview: https://ethereal.email/message/AbC123...
+   ```
+3. Open the `https://ethereal.email/message/...` **preview link** in your browser to see the
+   rendered email.
+
+### Sending to real inboxes (optional)
+
+The mailer automatically switches to real delivery if SMTP credentials are present. Add these to
+`.env` (e.g. a Gmail App Password, or a service like Resend/Brevo/Mailtrap) and restart:
+
+```
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=465
+SMTP_SECURE=true
+SMTP_USER=youraddress@gmail.com
+SMTP_PASS=your-app-password
+EMAIL_FROM="Tikiti <youraddress@gmail.com>"
+```
+
+### Event reminders
+
+Reminder emails for events starting within 24 hours are sent by an endpoint you trigger with a
+scheduler (Windows Task Scheduler / cron):
+
+```
+GET /api/cron/reminders?secret=<CRON_SECRET>
+```
+
+`CRON_SECRET` is set in `.env`. Each registration is reminded only once.
+
+## Project status
+
+Built in sprints. Implemented so far: authentication, onboarding & profiles, event discovery
+with search/filters, event creation & management, registration with QR tickets, and
+transactional email. Upcoming: co-host/admin/volunteer roles, private-event access, QR check-in,
+organizational pages, and host analytics.

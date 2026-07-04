@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
+import { sendEmail } from "@/lib/email";
+import { cancellationEmail } from "@/lib/emails";
 
 export async function cancelRegistrationAction(registrationId: string) {
   const session = await auth();
@@ -11,7 +13,7 @@ export async function cancelRegistrationAction(registrationId: string) {
 
   const registration = await prisma.registration.findUnique({
     where: { id: registrationId },
-    select: { id: true, userId: true, eventId: true },
+    select: { id: true, userId: true, eventId: true, name: true, email: true, event: true },
   });
   if (!registration || registration.userId !== session.user.id) {
     throw new Error("Registration not found.");
@@ -28,6 +30,11 @@ export async function cancelRegistrationAction(registrationId: string) {
       data: { status: "INVALID" },
     }),
   ]);
+
+  await sendEmail({
+    to: registration.email,
+    ...cancellationEmail(registration.name, registration.event),
+  });
 
   revalidatePath("/account/tickets");
   revalidatePath(`/events/${registration.eventId}`);
