@@ -1,11 +1,12 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { Settings, Building2, CalendarX } from "lucide-react";
+import { Settings, Building2, CalendarX, Users, CalendarCheck } from "lucide-react";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
 import { Card, CardBody } from "@/components/ui/card";
 import { ButtonLink } from "@/components/ui/button";
 import { EventCard } from "@/components/events/event-card";
+import { FollowButton } from "@/components/orgs/follow-button";
 import { getUserOrgRole, CAN_MANAGE_ORG } from "@/lib/orgs";
 
 async function getOrg(slug: string) {
@@ -64,6 +65,26 @@ export default async function OrgPage({
   const role = await getUserOrgRole(session?.user?.id, org.id);
   const canManage = Boolean(role && CAN_MANAGE_ORG.includes(role));
 
+  const [followerCount, eventsHosted, myFollow] = await Promise.all([
+    prisma.organizationFollow.count({ where: { organizationId: org.id } }),
+    prisma.event.count({
+      where: { organizationId: org.id, status: "PUBLISHED", visibility: "PUBLIC" },
+    }),
+    session?.user?.id
+      ? prisma.organizationFollow.findUnique({
+          where: {
+            userId_organizationId: { userId: session.user.id, organizationId: org.id },
+          },
+        })
+      : Promise.resolve(null),
+  ]);
+  const isFollowing = Boolean(myFollow);
+  const memberSince = new Intl.DateTimeFormat("en-KE", {
+    month: "short",
+    year: "numeric",
+    timeZone: "Africa/Nairobi",
+  }).format(org.createdAt);
+
   return (
     <div className="space-y-8">
       {/* Header */}
@@ -89,14 +110,39 @@ export default async function OrgPage({
               {org.description && (
                 <p className="mt-1 max-w-xl text-sm text-muted">{org.description}</p>
               )}
+              <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted">
+                <span className="inline-flex items-center gap-1">
+                  <Users className="h-4 w-4" />
+                  {followerCount} {followerCount === 1 ? "follower" : "followers"}
+                </span>
+                <span className="inline-flex items-center gap-1">
+                  <CalendarCheck className="h-4 w-4" />
+                  {eventsHosted} {eventsHosted === 1 ? "event hosted" : "events hosted"}
+                </span>
+                <span>On Tikiti since {memberSince}</span>
+              </div>
             </div>
           </div>
-          {canManage && (
-            <ButtonLink href={`/orgs/${slug}/manage`} variant="outline" size="sm">
-              <Settings className="h-4 w-4" />
-              Manage
-            </ButtonLink>
-          )}
+          <div className="flex shrink-0 items-center gap-2">
+            {session?.user ? (
+              <FollowButton
+                organizationId={org.id}
+                slug={slug}
+                initialFollowing={isFollowing}
+                size="sm"
+              />
+            ) : (
+              <ButtonLink href={`/login?callbackUrl=/orgs/${slug}`} size="sm">
+                Follow
+              </ButtonLink>
+            )}
+            {canManage && (
+              <ButtonLink href={`/orgs/${slug}/manage`} variant="outline" size="sm">
+                <Settings className="h-4 w-4" />
+                Manage
+              </ButtonLink>
+            )}
+          </div>
         </div>
       </div>
 
@@ -119,10 +165,15 @@ export default async function OrgPage({
         )}
       </section>
 
-      {/* Past */}
+      {/* Past — a track record of the organization's activity */}
       {past.length > 0 && (
         <section className="space-y-4">
-          <h2 className="text-xl font-semibold">Past events</h2>
+          <div>
+            <h2 className="text-xl font-semibold">Past events</h2>
+            <p className="text-sm text-muted">
+              A track record of events this organization has hosted.
+            </p>
+          </div>
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {past.map((event) => (
               <EventCard key={event.id} event={event} />

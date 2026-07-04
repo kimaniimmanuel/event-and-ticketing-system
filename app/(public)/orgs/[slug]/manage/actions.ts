@@ -6,6 +6,8 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
 import { orgSchema, type OrgInput } from "@/lib/validators/org";
 import { getUserOrgRole, CAN_MANAGE_ORG, CAN_MANAGE_ORG_ADMINS } from "@/lib/orgs";
+import { sendEmail } from "@/lib/email";
+import { newOrgEventEmail } from "@/lib/emails";
 
 async function requireOrgRole(orgId: string, allowed: string[]) {
   const session = await auth();
@@ -110,6 +112,34 @@ export async function setEventOrgAction(
     where: { id: eventId },
     data: { organizationId: attach ? orgId : null },
   });
+
+  // Notify followers when an upcoming public event joins the organization.
+  if (attach) {
+    const [org, fullEvent, followers] = await Promise.all([
+      prisma.organization.findUnique({ where: { id: orgId }, select: { name: true } }),
+      prisma.event.findUnique({ where: { id: eventId } }),
+      prisma.organizationFollow.findMany({
+        where: { organizationId: orgId },
+        include: { user: { select: { name: true, email: true } } },
+      }),
+    ]);
+    if (
+      org &&
+      fullEvent &&
+      fullEvent.status === "PUBLISHED" &&
+      fullEvent.visibility === "PUBLIC" &&
+      fullEvent.startAt > new Date()
+    ) {
+      await Promise.all(
+        followers.map((f) =>
+          sendEmail({
+            to: f.user.email,
+            ...newOrgEventEmail(f.user.name, org.name, fullEvent),
+          }),
+        ),
+      );
+    }
+  }
 
   revalidatePath(`/orgs/${slug}`);
   revalidatePath(`/orgs/${slug}/manage`);

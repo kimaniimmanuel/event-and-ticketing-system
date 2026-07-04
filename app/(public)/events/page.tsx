@@ -1,8 +1,10 @@
 import { Prisma } from "@prisma/client";
 import { CalendarX } from "lucide-react";
+import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
 import { Card, CardBody } from "@/components/ui/card";
 import { EventCard } from "@/components/events/event-card";
+import { OrgRail } from "@/components/orgs/org-rail";
 import { EventFilters, type FilterValues } from "./event-filters";
 
 export const metadata = { title: "Discover events" };
@@ -19,6 +21,10 @@ export default async function DiscoverPage({
     location: sp.location?.trim() || undefined,
     format: sp.format || undefined,
   };
+  // The org rail only appears on the default (unfiltered) discovery view.
+  const hasFilters = Boolean(
+    current.q || current.category || current.location || current.format,
+  );
 
   const where: Prisma.EventWhereInput = {
     status: "PUBLISHED",
@@ -35,7 +41,7 @@ export default async function DiscoverPage({
   if (current.location) where.venue = { contains: current.location };
   if (current.format) where.format = current.format;
 
-  const [events, categories] = await Promise.all([
+  const [events, categories, session, railOrgs] = await Promise.all([
     prisma.event.findMany({
       where,
       include: { category: { select: { name: true } } },
@@ -46,7 +52,25 @@ export default async function DiscoverPage({
       orderBy: { name: "asc" },
       select: { id: true, name: true },
     }),
+    auth(),
+    prisma.organization.findMany({
+      orderBy: { followers: { _count: "desc" } },
+      take: 8,
+      include: { _count: { select: { followers: true } } },
+    }),
   ]);
+
+  const followedIds =
+    !hasFilters && session?.user?.id
+      ? new Set(
+          (
+            await prisma.organizationFollow.findMany({
+              where: { userId: session.user.id },
+              select: { organizationId: true },
+            })
+          ).map((f) => f.organizationId),
+        )
+      : new Set<string>();
 
   return (
     <div className="space-y-6">
@@ -56,6 +80,20 @@ export default async function DiscoverPage({
           Browse upcoming free events. Filter by category, location and format.
         </p>
       </div>
+
+      {!hasFilters && (
+        <OrgRail
+          orgs={railOrgs.map((o) => ({
+            id: o.id,
+            slug: o.slug,
+            name: o.name,
+            logo: o.logo,
+            followerCount: o._count.followers,
+          }))}
+          followedIds={followedIds}
+          isLoggedIn={Boolean(session?.user)}
+        />
+      )}
 
       <EventFilters categories={categories} current={current} />
 

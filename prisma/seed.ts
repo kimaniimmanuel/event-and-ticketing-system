@@ -117,6 +117,70 @@ async function main() {
     console.log(`  • ${event.title}`);
   }
 
+  console.log("Seeding demo organization with past + upcoming events…");
+  const attendee = await prisma.user.findUnique({
+    where: { email: "attendee@tikiti.dev" },
+  });
+  const org = await prisma.organization.upsert({
+    where: { slug: "nairobi-tech-community" },
+    update: {},
+    create: {
+      name: "Nairobi Tech Community",
+      slug: "nairobi-tech-community",
+      description:
+        "A community hub for tech meetups, workshops, and hackathons across Nairobi.",
+      ownerId: host.id,
+      members: { create: { userId: host.id, role: "OWNER" } },
+    },
+  });
+
+  // Only seed the org's events once (keeps re-running the seed idempotent).
+  const orgEventCount = await prisma.event.count({ where: { organizationId: org.id } });
+  if (orgEventCount === 0) {
+    const orgEvents = [
+      {
+        title: "Community Launch Night",
+        description: "Our very first meetup — lightning talks, demos, and networking.",
+        daysFromNow: -45,
+      },
+      {
+        title: "Intro to TypeScript Workshop",
+        description: "A hands-on evening covering TypeScript fundamentals.",
+        daysFromNow: -14,
+      },
+      {
+        title: "Hack Night: Build with AI",
+        description: "An evening of hacking on AI-powered apps. Bring a laptop.",
+        daysFromNow: 21,
+      },
+    ];
+    for (const e of orgEvents) {
+      const startAt = new Date();
+      startAt.setDate(startAt.getDate() + e.daysFromNow);
+      startAt.setHours(18, 0, 0, 0);
+      await prisma.event.create({
+        data: {
+          title: e.title,
+          description: e.description,
+          categoryId: tech.id,
+          format: "IN_PERSON",
+          venue: "iHub, Nairobi",
+          capacity: 100,
+          startAt,
+          hostId: host.id,
+          organizationId: org.id,
+          roles: { create: { userId: host.id, role: "HOST" } },
+        },
+      });
+    }
+    if (attendee) {
+      await prisma.organizationFollow.create({
+        data: { userId: attendee.id, organizationId: org.id },
+      });
+    }
+    console.log("  • Nairobi Tech Community (2 past, 1 upcoming event)");
+  }
+
   console.log("Seed complete. Demo login: host@tikiti.dev / password123");
 }
 

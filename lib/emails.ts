@@ -78,6 +78,23 @@ export function roleAssignmentEmail(name: string, event: EmailEvent, role: strin
   return { subject, html, text };
 }
 
+export function newOrgEventEmail(
+  name: string,
+  orgName: string,
+  event: EmailEvent,
+) {
+  const subject = `${orgName} just added a new event: ${event.title}`;
+  const html = layout(
+    `New event from ${orgName} 📣`,
+    `<p>Hi ${name}, ${orgName} — which you follow — just announced a new event:</p>
+     <p style="font-size:16px;font-weight:600">${event.title}</p>
+     ${detailsBlock(event)}
+     <p>${button(`${appBaseUrl()}/events/${event.id}`, "View & register")}</p>`,
+  );
+  const text = `${orgName} added a new event: ${event.title}.\nWhen: ${formatEventDate(event.startAt)}\nWhere: ${locationLine(event)}\n${appBaseUrl()}/events/${event.id}`;
+  return { subject, html, text };
+}
+
 export function reminderEmail(name: string, event: EmailEvent) {
   const subject = `Reminder: ${event.title} is coming up`;
   const html = layout(

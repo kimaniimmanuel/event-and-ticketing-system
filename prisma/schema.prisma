@@ -25,6 +25,7 @@ model User {
   interests         UserInterest[]
   ownedOrganizations Organization[]      @relation("OrgOwner")
   orgMemberships    OrganizationMember[]
+  orgFollows        OrganizationFollow[]
   hostedEvents      Event[]              @relation("EventHost")
   eventRoles        EventRole[]
   registrations     Registration[]
@@ -61,9 +62,23 @@ model Organization {
   ownerId     String
   createdAt   DateTime @default(now())
 
-  owner   User                 @relation("OrgOwner", fields: [ownerId], references: [id])
-  members OrganizationMember[]
-  events  Event[]
+  owner     User                 @relation("OrgOwner", fields: [ownerId], references: [id])
+  members   OrganizationMember[]
+  followers OrganizationFollow[]
+  events    Event[]
+}
+
+// A user following an organization to get notified of its new events.
+model OrganizationFollow {
+  id             String   @id @default(cuid())
+  userId         String
+  organizationId String
+  createdAt      DateTime @default(now())
+
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, organizationId])
 }
 
 model OrganizationMember {

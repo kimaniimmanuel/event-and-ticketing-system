@@ -19,6 +19,9 @@ export async function Navbar() {
           <ButtonLink href="/events" variant="ghost" size="sm">
             Discover
           </ButtonLink>
+          <ButtonLink href="/orgs" variant="ghost" size="sm">
+            Organizations
+          </ButtonLink>
 
           {user ? (
             <>
