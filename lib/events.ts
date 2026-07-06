@@ -22,6 +22,14 @@ export function isRegistrationOpen(event: {
   return registrationCloseTime(event).getTime() > Date.now();
 }
 
+/**
+ * Whether an event has already started (or passed). Once true, the event is
+ * locked: its details can no longer be edited.
+ */
+export function hasEventStarted(startAt: Date): boolean {
+  return startAt.getTime() <= Date.now();
+}
+
 /** Roles that may edit an event's details. */
 export const CAN_EDIT_ROLES = ["HOST", "COHOST", "ADMIN"];
 /** Roles that may delete an event. */

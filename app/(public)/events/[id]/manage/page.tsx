@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { ArrowLeft, ScanLine, BarChart3 } from "lucide-react";
+import { ArrowLeft, ScanLine, BarChart3, Lock } from "lucide-react";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
 import { Card, CardBody } from "@/components/ui/card";
@@ -11,6 +11,7 @@ import {
   CAN_EDIT_ROLES,
   CAN_DELETE_ROLES,
   CAN_MANAGE_ROLES,
+  hasEventStarted,
 } from "@/lib/events";
 import { toDateTimeLocalValue } from "@/lib/format";
 import { updateEventAction } from "./actions";
@@ -60,6 +61,7 @@ export default async function ManageEventPage({
 
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3210";
   const inviteUrl = `${baseUrl}/events/${id}?code=${event.accessCode ?? ""}`;
+  const isPast = hasEventStarted(event.startAt);
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
@@ -81,58 +83,77 @@ export default async function ManageEventPage({
             <BarChart3 className="h-4 w-4" />
             Analytics
           </ButtonLink>
-          <ButtonLink href={`/events/${id}/check-in`} variant="outline" size="sm">
-            <ScanLine className="h-4 w-4" />
-            Check in
-          </ButtonLink>
+          {!isPast && (
+            <ButtonLink href={`/events/${id}/check-in`} variant="outline" size="sm">
+              <ScanLine className="h-4 w-4" />
+              Check in
+            </ButtonLink>
+          )}
         </div>
       </div>
 
-      <Card>
-        <CardBody>
-          <EventForm
-            categories={categories}
-            action={updateEventAction.bind(null, id)}
-            submitLabel="Save changes"
-            defaultValues={{
-              title: event.title,
-              description: event.description,
-              categoryId: event.categoryId,
-              format: event.format as "IN_PERSON" | "VIRTUAL",
-              venue: event.venue ?? "",
-              virtualLink: event.virtualLink ?? "",
-              startAt: toDateTimeLocalValue(event.startAt),
-              endAt: event.endAt ? toDateTimeLocalValue(event.endAt) : "",
-              registrationDeadline: event.registrationDeadline
-                ? toDateTimeLocalValue(event.registrationDeadline)
-                : "",
-              capacity: event.capacity != null ? String(event.capacity) : "",
-              visibility: event.visibility as "PUBLIC" | "PRIVATE",
-              recurrence: event.recurrence as "NONE" | "DAILY" | "WEEKLY" | "MONTHLY",
-              bannerImage: event.bannerImage ?? "",
-              logo: event.logo ?? "",
-            }}
-          />
-        </CardBody>
-      </Card>
+      {isPast ? (
+        <Card>
+          <CardBody className="flex items-center gap-3">
+            <Lock className="h-5 w-5 shrink-0 text-muted" />
+            <div>
+              <p className="font-medium">This event has already taken place.</p>
+              <p className="text-sm text-muted">
+                Its details, team, and registrations can no longer be edited. You can still view
+                its analytics or delete it below.
+              </p>
+            </div>
+          </CardBody>
+        </Card>
+      ) : (
+        <Card>
+          <CardBody>
+            <EventForm
+              categories={categories}
+              action={updateEventAction.bind(null, id)}
+              submitLabel="Save changes"
+              defaultValues={{
+                title: event.title,
+                description: event.description,
+                categoryId: event.categoryId,
+                format: event.format as "IN_PERSON" | "VIRTUAL",
+                venue: event.venue ?? "",
+                virtualLink: event.virtualLink ?? "",
+                startAt: toDateTimeLocalValue(event.startAt),
+                endAt: event.endAt ? toDateTimeLocalValue(event.endAt) : "",
+                registrationDeadline: event.registrationDeadline
+                  ? toDateTimeLocalValue(event.registrationDeadline)
+                  : "",
+                capacity: event.capacity != null ? String(event.capacity) : "",
+                visibility: event.visibility as "PUBLIC" | "PRIVATE",
+                recurrence: event.recurrence as "NONE" | "DAILY" | "WEEKLY" | "MONTHLY",
+                bannerImage: event.bannerImage ?? "",
+                logo: event.logo ?? "",
+              }}
+            />
+          </CardBody>
+        </Card>
+      )}
 
-      <Card>
-        <CardBody className="space-y-4">
-          <div>
-            <h2 className="font-semibold">Team &amp; roles</h2>
-            <p className="text-sm text-muted">
-              Add co-hosts, admins, and volunteers to help run this event.
-            </p>
-          </div>
-          <TeamManager
-            eventId={id}
-            members={members}
-            canManage={CAN_MANAGE_ROLES.includes(role)}
-          />
-        </CardBody>
-      </Card>
+      {!isPast && (
+        <Card>
+          <CardBody className="space-y-4">
+            <div>
+              <h2 className="font-semibold">Team &amp; roles</h2>
+              <p className="text-sm text-muted">
+                Add co-hosts, admins, and volunteers to help run this event.
+              </p>
+            </div>
+            <TeamManager
+              eventId={id}
+              members={members}
+              canManage={CAN_MANAGE_ROLES.includes(role)}
+            />
+          </CardBody>
+        </Card>
+      )}
 
-      {event.visibility === "PRIVATE" && (
+      {!isPast && event.visibility === "PRIVATE" && (
         <Card>
           <CardBody className="space-y-3">
             <h2 className="font-semibold">Private access</h2>

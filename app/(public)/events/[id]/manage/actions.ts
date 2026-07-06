@@ -12,6 +12,7 @@ import {
   CAN_DELETE_ROLES,
   CAN_MANAGE_ROLES,
   ASSIGNABLE_ROLES,
+  hasEventStarted,
 } from "@/lib/events";
 import { sendEmail } from "@/lib/email";
 import { roleAssignmentEmail } from "@/lib/emails";
@@ -25,6 +26,20 @@ export async function updateEventAction(eventId: string, input: EventInput) {
     return { errors: { title: ["You don't have permission to edit this event."] } };
   }
 
+  const current = await prisma.event.findUnique({
+    where: { id: eventId },
+    select: { accessCode: true, startAt: true },
+  });
+  if (!current) {
+    return { errors: { title: ["Event not found."] } };
+  }
+  // Once an event has started, its details are locked.
+  if (hasEventStarted(current.startAt)) {
+    return {
+      errors: { title: ["This event has already taken place and can no longer be edited."] },
+    };
+  }
+
   const parsed = eventSchema.safeParse(input);
   if (!parsed.success) {
     return { errors: parsed.error.flatten().fieldErrors };
@@ -32,10 +47,6 @@ export async function updateEventAction(eventId: string, input: EventInput) {
   const d = parsed.data;
 
   // Ensure a private event always has an access code (generate on first switch).
-  const current = await prisma.event.findUnique({
-    where: { id: eventId },
-    select: { accessCode: true },
-  });
   const accessCode =
     d.visibility === "PRIVATE"
       ? (current?.accessCode ?? crypto.randomUUID().slice(0, 8).toUpperCase())
