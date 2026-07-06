@@ -45,7 +45,7 @@ export async function sendEmail({ to, subject, html, text }: SendArgs) {
   try {
     const transporter = await getTransporter();
     const info = await transporter.sendMail({
-      from: process.env.EMAIL_FROM ?? "Tikiti <no-reply@tikiti.dev>",
+      from: process.env.EMAIL_FROM ?? "DUNDA <no-reply@dunda.dev>",
       to,
       subject,
       html,

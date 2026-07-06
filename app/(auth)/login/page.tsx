@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Card, CardBody } from "@/components/ui/card";
 import { LoginForm } from "./login-form";
 
-export const metadata = { title: "Log in · Tikiti" };
+export const metadata = { title: "Log in · DUNDA" };
 
 export default function LoginPage() {
   return (

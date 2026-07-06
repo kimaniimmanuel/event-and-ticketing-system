@@ -18,7 +18,7 @@ export async function Navbar() {
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
         <Link href="/" className="flex items-center gap-2 font-bold">
           <Ticket className="h-5 w-5 text-primary" />
-          Tikiti
+          DUNDA
         </Link>
 
         {/* Desktop nav */}

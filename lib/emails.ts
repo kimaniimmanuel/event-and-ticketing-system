@@ -20,7 +20,7 @@ function locationLine(event: EmailEvent) {
 
 function layout(heading: string, bodyHtml: string) {
   return `<div style="font-family:system-ui,sans-serif;max-width:520px;margin:0 auto;color:#0f172a">
-    <div style="background:#6366f1;color:#fff;padding:16px 24px;border-radius:12px 12px 0 0;font-weight:700;font-size:18px">🎟️ Tikiti</div>
+    <div style="background:#6366f1;color:#fff;padding:16px 24px;border-radius:12px 12px 0 0;font-weight:700;font-size:18px">🎟️ DUNDA</div>
     <div style="border:1px solid #e2e8f0;border-top:none;border-radius:0 0 12px 12px;padding:24px">
       <h1 style="font-size:20px;margin:0 0 12px">${heading}</h1>
       ${bodyHtml}

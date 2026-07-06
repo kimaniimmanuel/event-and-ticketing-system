@@ -26,9 +26,9 @@ export function buildIcs(event: CalendarEvent) {
   return [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
-    "PRODID:-//Tikiti//Events//EN",
+    "PRODID:-//DUNDA//Events//EN",
     "BEGIN:VEVENT",
-    `UID:${event.id}@tikiti`,
+    `UID:${event.id}@dunda`,
     `DTSTAMP:${toIcsDate(new Date())}`,
     `DTSTART:${toIcsDate(event.startAt)}`,
     `DTEND:${toIcsDate(endOrDefault(event))}`,

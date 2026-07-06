@@ -119,7 +119,7 @@ export default async function OrgPage({
                   <CalendarCheck className="h-4 w-4" />
                   {eventsHosted} {eventsHosted === 1 ? "event hosted" : "events hosted"}
                 </span>
-                <span>On Tikiti since {memberSince}</span>
+                <span>On DUNDA since {memberSince}</span>
               </div>
             </div>
           </div>

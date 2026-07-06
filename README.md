@@ -1,4 +1,4 @@
-# Tikiti — Centralized Event & Ticketing System
+# DUNDA — Centralized Event & Ticketing System
 
 A web platform for discovering, registering for, and hosting **free** events, with digital
 QR tickets. Attendees browse and filter events and RSVP; hosts create and manage events and
@@ -31,8 +31,8 @@ Open **http://localhost:3210**.
 
 | Role     | Email                  | Password      |
 | -------- | ---------------------- | ------------- |
-| Host     | `host@tikiti.dev`      | `password123` |
-| Attendee | `attendee@tikiti.dev`  | `password123` |
+| Host     | `host@dunda.dev`      | `password123` |
+| Attendee | `attendee@dunda.dev`  | `password123` |
 
 ### Useful scripts
 
@@ -70,7 +70,7 @@ SMTP_PORT=465
 SMTP_SECURE=true
 SMTP_USER=youraddress@gmail.com
 SMTP_PASS=your-app-password
-EMAIL_FROM="Tikiti <youraddress@gmail.com>"
+EMAIL_FROM="DUNDA <youraddress@gmail.com>"
 ```
 
 ### Event reminders

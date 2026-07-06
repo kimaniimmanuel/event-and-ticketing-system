@@ -26,7 +26,7 @@ export async function GET(
   return new NextResponse(new Uint8Array(png), {
     headers: {
       "Content-Type": "image/png",
-      "Content-Disposition": `attachment; filename="tikiti-ticket-${ticket.id}.png"`,
+      "Content-Disposition": `attachment; filename="dunda-ticket-${ticket.id}.png"`,
     },
   });
 }

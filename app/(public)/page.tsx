@@ -25,11 +25,11 @@ export default function LandingPage() {
     <div className="space-y-16">
       <section className="mx-auto max-w-2xl pt-10 text-center">
         <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl">
-          Find your next event. <span className="text-primary">Host your own.</span>
+          Ukipata fom, <span className="text-primary">we tokea tu!</span>
         </h1>
         <p className="mx-auto mt-4 max-w-xl text-lg text-muted">
-          One place to discover free events happening around you — and the simplest way for
-          organizers to manage registrations and check-ins.
+          DUNDA is your one place to discover free events happening around you — and the
+          simplest way for organizers to manage registrations and check-ins.
         </p>
         <div className="mt-8 flex justify-center gap-3">
           <ButtonLink href="/events" size="lg">

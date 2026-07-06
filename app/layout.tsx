@@ -17,15 +17,15 @@ const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3210";
 export const metadata: Metadata = {
   metadataBase: new URL(appUrl),
   title: {
-    default: "Tikiti — Discover & host free events",
-    template: "%s · Tikiti",
+    default: "DUNDA — Ukipata fom, we tokea tu!",
+    template: "%s · DUNDA",
   },
   description:
     "A centralized platform to discover, register for, and host free events, with digital QR tickets.",
   openGraph: {
-    siteName: "Tikiti",
+    siteName: "DUNDA",
     type: "website",
-    title: "Tikiti — Discover & host free events",
+    title: "DUNDA — Ukipata fom, we tokea tu!",
     description:
       "A centralized platform to discover, register for, and host free events, with digital QR tickets.",
   },

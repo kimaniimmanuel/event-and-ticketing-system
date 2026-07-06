@@ -7,7 +7,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
       <div className="w-full max-w-md">
         <Link href="/" className="mb-8 flex items-center justify-center gap-2">
           <Ticket className="h-6 w-6 text-primary" />
-          <span className="text-lg font-bold">Tikiti</span>
+          <span className="text-lg font-bold">DUNDA</span>
         </Link>
         {children}
       </div>

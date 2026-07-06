@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Card, CardBody } from "@/components/ui/card";
 import { SignupForm } from "./signup-form";
 
-export const metadata = { title: "Sign up · Tikiti" };
+export const metadata = { title: "Sign up · DUNDA" };
 
 export default function SignupPage() {
   return (

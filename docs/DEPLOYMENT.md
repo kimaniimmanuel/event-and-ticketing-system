@@ -1,4 +1,4 @@
-# Setup & Deployment Guide — Tikiti
+# Setup & Deployment Guide — DUNDA
 
 This guide covers **(A) running the app locally** and **(B) hosting it in production**.
 
@@ -26,8 +26,13 @@ npm install
 DATABASE_URL="file:./dev.db"
 AUTH_SECRET="run: npx auth secret  (paste the generated value)"
 NEXT_PUBLIC_APP_URL="http://localhost:3210"
-EMAIL_FROM="Tikiti <no-reply@tikiti.dev>"
+EMAIL_FROM="DUNDA <no-reply@dunda.dev>"
 CRON_SECRET="any-random-string-for-dev"
+
+# Image uploads (UploadThing). Get the token from your uploadthing.com dashboard.
+# Set NEXT_PUBLIC_UPLOADS_ENABLED="false" (or omit the token) to fall back to pasting URLs.
+UPLOADTHING_TOKEN="your-uploadthing-token"
+NEXT_PUBLIC_UPLOADS_ENABLED="true"
 
 # Email: leave SMTP_* unset in dev to use the Ethereal preview inbox.
 # SMTP_HOST=
@@ -35,6 +40,8 @@ CRON_SECRET="any-random-string-for-dev"
 # SMTP_USER=
 # SMTP_PASS=
 ```
+Image uploads use **[UploadThing](https://uploadthing.com)** — create a free account, copy the
+app token, and paste it as `UPLOADTHING_TOKEN`. Uploads are gated to logged-in users.
 Generate a real `AUTH_SECRET` with `npx auth secret`.
 
 ## 4. Database + seed
@@ -49,7 +56,7 @@ npm run dev                # http://localhost:3210
 ```
 > **Port note:** the app runs on **3210** (port 3000 is blocked on some Windows machines).
 
-**Demo logins** (password `password123`): `host@tikiti.dev`, `attendee@tikiti.dev`.
+**Demo logins** (password `password123`): `host@dunda.dev`, `attendee@dunda.dev`.
 
 ## 6. Handy commands
 | Command | Purpose |

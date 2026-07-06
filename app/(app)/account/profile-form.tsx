@@ -1,10 +1,11 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { updateProfileAction, type ProfileFormState } from "./actions";
 import { Button } from "@/components/ui/button";
 import { Input, Label, FieldError } from "@/components/ui/input";
+import { ImageUpload } from "@/components/ui/image-upload";
 
 type Profile = {
   name: string;
@@ -27,6 +28,7 @@ export function ProfileForm({ profile }: { profile: Profile }) {
     updateProfileAction,
     {},
   );
+  const [avatar, setAvatar] = useState(profile.avatar ?? "");
 
   return (
     <form action={action} className="space-y-4">
@@ -56,14 +58,8 @@ export function ProfileForm({ profile }: { profile: Profile }) {
         <FieldError>{state.errors?.location?.[0]}</FieldError>
       </div>
       <div>
-        <Label htmlFor="avatar">Avatar image URL</Label>
-        <Input
-          id="avatar"
-          name="avatar"
-          type="url"
-          defaultValue={profile.avatar ?? ""}
-          placeholder="https://…"
-        />
+        <input type="hidden" name="avatar" value={avatar} />
+        <ImageUpload id="avatar" label="Avatar" value={avatar} onChange={setAvatar} />
         <FieldError>{state.errors?.avatar?.[0]}</FieldError>
       </div>
       <SaveButton />

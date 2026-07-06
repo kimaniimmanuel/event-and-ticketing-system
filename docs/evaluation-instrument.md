@@ -1,4 +1,4 @@
-# System Evaluation Instrument — Tikiti Event & Ticketing System
+# System Evaluation Instrument — DUNDA Event & Ticketing System
 
 **Purpose.** This instrument supports the mixed-methods evaluation described in Chapter 3
 (§3.2.1). It combines a **quantitative** component (task success + 1–5 satisfaction ratings) and
@@ -17,7 +17,7 @@ Participant ID: ______   Role tested:  ☐ Attendee  ☐ Host/Organizer  ☐ Bot
 ## Part A — Task scenarios (observed)
 
 Ask the participant to complete each task unaided. Record whether they completed it and any
-difficulty. (Demo logins: `host@tikiti.dev` / `attendee@tikiti.dev`, password `password123`.)
+difficulty. (Demo logins: `host@dunda.dev` / `attendee@dunda.dev`, password `password123`.)
 
 | # | Task | Completed? | Time / notes |
 |---|------|:----------:|--------------|

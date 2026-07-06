@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { orgSchema, type OrgInput } from "@/lib/validators/org";
 import { Button } from "@/components/ui/button";
 import { Input, Textarea, Label, FieldError } from "@/components/ui/input";
+import { ImageUpload } from "@/components/ui/image-upload";
 
 export type OrgActionResult = { errors?: Record<string, string[] | undefined> };
 
@@ -24,6 +25,8 @@ export function OrgForm({
   const {
     register,
     handleSubmit,
+    watch,
+    setValue,
     setError,
     formState: { errors },
   } = useForm<OrgInput>({
@@ -61,13 +64,21 @@ export function OrgForm({
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
-          <Label htmlFor="logo">Logo URL (optional)</Label>
-          <Input id="logo" placeholder="https://…" {...register("logo")} />
+          <ImageUpload
+            id="logo"
+            label="Logo (optional)"
+            value={watch("logo") ?? ""}
+            onChange={(url) => setValue("logo", url, { shouldValidate: true })}
+          />
           <FieldError>{errors.logo?.message}</FieldError>
         </div>
         <div>
-          <Label htmlFor="banner">Banner URL (optional)</Label>
-          <Input id="banner" placeholder="https://…" {...register("banner")} />
+          <ImageUpload
+            id="banner"
+            label="Banner (optional)"
+            value={watch("banner") ?? ""}
+            onChange={(url) => setValue("banner", url, { shouldValidate: true })}
+          />
           <FieldError>{errors.banner?.message}</FieldError>
         </div>
       </div>

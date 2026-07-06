@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { eventSchema, type EventInput } from "@/lib/validators/event";
 import { Button } from "@/components/ui/button";
 import { Input, Textarea, Select, Label, FieldError } from "@/components/ui/input";
+import { ImageUpload } from "@/components/ui/image-upload";
 
 type Category = { id: string; name: string };
 
@@ -29,6 +30,7 @@ export function EventForm({
     register,
     handleSubmit,
     watch,
+    setValue,
     setError,
     formState: { errors },
   } = useForm<EventInput>({
@@ -168,13 +170,21 @@ export function EventForm({
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
-          <Label htmlFor="bannerImage">Banner image URL (optional)</Label>
-          <Input id="bannerImage" placeholder="https://…" {...register("bannerImage")} />
+          <ImageUpload
+            id="bannerImage"
+            label="Banner image (optional)"
+            value={watch("bannerImage") ?? ""}
+            onChange={(url) => setValue("bannerImage", url, { shouldValidate: true })}
+          />
           <FieldError>{errors.bannerImage?.message}</FieldError>
         </div>
         <div>
-          <Label htmlFor="logo">Logo URL (optional)</Label>
-          <Input id="logo" placeholder="https://…" {...register("logo")} />
+          <ImageUpload
+            id="logo"
+            label="Logo (optional)"
+            value={watch("logo") ?? ""}
+            onChange={(url) => setValue("logo", url, { shouldValidate: true })}
+          />
           <FieldError>{errors.logo?.message}</FieldError>
         </div>
       </div>

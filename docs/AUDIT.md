@@ -1,4 +1,4 @@
-# Application Audit — Tikiti Event & Ticketing System
+# Application Audit — DUNDA Event & Ticketing System
 
 *Point-in-time review of the codebase as built across the 10-sprint plan.*
 
@@ -6,7 +6,7 @@
 
 ## 1. Executive summary
 
-Tikiti is a **feature-complete, well-structured Next.js 16 full-stack application** that fully
+DUNDA is a **feature-complete, well-structured Next.js 16 full-stack application** that fully
 implements the Chapter 1 objectives and Chapter 3 use cases (UC-01 → UC-10), plus two
 enhancements added beyond the spec (organization following/discovery, registration deadlines).
 
